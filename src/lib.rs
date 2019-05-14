@@ -10,35 +10,35 @@ use std::path::{Path, PathBuf};
 
 /// path to pandoc executable
 #[cfg(windows)]
-const PANDOC_PATH: &'static [&'static str] = &[
+const PANDOC_PATH: &[&str] = &[
     // this compiles the user's name into the binary, maybe not the greatest idea?
     concat!(env!("LOCALAPPDATA"), r#"\Pandoc\"#),
 ];
 /// path to pandoc executable
 #[cfg(not(windows))]
-const PANDOC_PATH: &'static [&'static str] = &[
+const PANDOC_PATH: &[&str] = &[
 ];
 
 /// path where miktex executables can be found
 #[cfg(windows)]
-const LATEX_PATH: &'static [&'static str] = &[
+const LATEX_PATH: &[&str] = &[
     r#"C:\Program Files (x86)\MiKTeX 2.9\miktex\bin"#,
     r#"C:\Program Files\MiKTeX 2.9\miktex\bin"#,
 ];
 /// path where miktex executables can be found
 #[cfg(not(windows))]
-const LATEX_PATH: &'static [&'static str] = &[
+const LATEX_PATH: &[&str] = &[
     r"/usr/local/bin",
     r"/usr/local/texlive/2015/bin/i386-linux",
 ];
 
 /// character to split path variable on windows
 #[cfg(windows)]
-const PATH_DELIMIT: &'static str = ";";
+const PATH_DELIMIT: &str = ";";
 
 /// character to split path variable on 'other platforms'
 #[cfg(not(windows))]
-const PATH_DELIMIT: &'static str = ":";
+const PATH_DELIMIT: &str = ":";
 
 use std::process::Command;
 use std::env;
@@ -243,7 +243,7 @@ impl PandocOption {
                 let nums = nums.iter()
                     .fold(String::new(),
                           |b, n| {
-                              if b.len() == 0 {
+                              if b.is_empty() {
                                   format!("{}", n)
                               } else {
                                   format!("{}, {}", b, n)
@@ -746,7 +746,7 @@ impl Pandoc {
     }
 
     /// Set or overwrite the document-class.
-    pub fn set_doc_class<'p>(&'p mut self, class: DocumentClass) -> &'p mut Pandoc {
+    pub fn set_doc_class(&mut self, class: DocumentClass) -> &mut Pandoc {
         self.options.push(PandocOption::Var("documentclass".to_string(), Some(class.to_string())));
         self
     }
@@ -755,7 +755,7 @@ impl Pandoc {
     ///
     /// If set to true, the command-line to execute pandoc (as a subprocess)
     /// will be displayed on stdout.
-    pub fn set_show_cmdline<'p>(&'p mut self, flag: bool) -> &'p mut Pandoc {
+    pub fn set_show_cmdline(&mut self, flag: bool) -> &mut Pandoc {
         self.print_pandoc_cmdline = flag;
         self
     }
@@ -779,7 +779,7 @@ impl Pandoc {
     /// [`set_input`](#method.set_input_format).
     pub fn add_input<'p, T: AsRef<Path> + ?Sized>(&'p mut self, filename: &T) -> &'p mut Pandoc {
         let filename = filename.as_ref().to_owned();
-        let _ = match self.input {
+        match self.input {
             Some(InputKind::Files(ref mut files)) => {
                 files.push(filename);
             },
@@ -788,7 +788,7 @@ impl Pandoc {
             None => {
                 self.input = Some(InputKind::Files(vec![filename]));
             },
-        };
+        }
         self
     }
 
@@ -812,7 +812,7 @@ impl Pandoc {
     }
 
     /// Set or overwrite the output filename.
-    pub fn set_output<'p>(&'p mut self, output: OutputKind) -> &'p mut Pandoc {
+    pub fn set_output(&mut self, output: OutputKind) -> &mut Pandoc {
         self.output = Some(output);
         self
     }
@@ -833,13 +833,13 @@ impl Pandoc {
     ///
     /// By default, documents are transformed as they are. If this option is set, a table of
     /// contents is added right in front of the actual document.
-    pub fn set_toc<'p>(&'p mut self) -> &'p mut Pandoc {
+    pub fn set_toc(&mut self) -> &mut Pandoc {
         self.options.push(PandocOption::TableOfContents);
         self
     }
 
     /// Treat top-level headers as chapters in LaTeX, ConTeXt, and DocBook output.
-    pub fn set_chapters<'p>(&'p mut self) -> &'p mut Pandoc {
+    pub fn set_chapters(&mut self) -> &mut Pandoc {
         self.options.push(PandocOption::TopLevelDivision(Tld::Chapter));
         self
     }
@@ -848,7 +848,7 @@ impl Pandoc {
     ///
     /// If this function is called, all sections will be numbered. Normally, sections in LaTeX,
     /// ConTeXt, HTML, or EPUB output are unnumbered.
-    pub fn set_number_sections<'p>(&'p mut self) -> &'p mut Pandoc {
+    pub fn set_number_sections(&mut self) -> &mut Pandoc {
         self.options.push(PandocOption::NumberSections);
         self
     }
@@ -860,7 +860,7 @@ impl Pandoc {
     }
 
     /// Set the header level that causes a new slide to be generated.
-    pub fn set_slide_level<'p>(&'p mut self, level: u32) -> &'p mut Pandoc {
+    pub fn set_slide_level(&mut self, level: u32) -> &mut Pandoc {
         self.options.push(PandocOption::SlideLevel(level));
         self
     }
@@ -882,13 +882,13 @@ impl Pandoc {
     /// Pandoc parses any of the supported input formats to an abstract syntax tree (AST). If a
     /// filter is specified, it will receive a JSON representation of this AST and can transform it
     /// to its liking and add/modify/remove elements. The output is then passed back to Pandoc.
-    pub fn add_filter<'p>(&'p mut self, filter: fn(String) -> String) -> &'p mut Pandoc {
+    pub fn add_filter(&mut self, filter: fn(String) -> String) -> &mut Pandoc {
         self.filters.push(filter);
         self
     }
 
     /// Add a [PandocOption](PandocOption.t.html).
-    pub fn add_option<'p>(&'p mut self, option: PandocOption) -> &'p mut Pandoc {
+    pub fn add_option(&mut self, option: PandocOption) -> &mut Pandoc {
         self.options.push(option);
         self
     }
@@ -914,8 +914,8 @@ impl Pandoc {
         let path: String = self.latex_path_hint.iter()
             .chain(self.pandoc_path_hint.iter())
             .map(|p| p.to_str().expect("non-utf8 path"))
-            .chain(PANDOC_PATH.into_iter().cloned())
-            .chain(LATEX_PATH.into_iter().cloned())
+            .chain(PANDOC_PATH.iter().cloned())
+            .chain(LATEX_PATH.iter().cloned())
             .chain([env::var("PATH").unwrap()].iter().map(std::borrow::Borrow::borrow))
             .intersperse(PATH_DELIMIT)
             .collect();
@@ -1037,7 +1037,7 @@ impl Pandoc {
     /// The `PandocOutput` variant returned depends on the `OutputKind`
     /// configured:
     pub fn execute(mut self) -> Result<PandocOutput, PandocError> {
-        let _ = try!(self.preprocess());
+        try!(self.preprocess());
         let output_kind = self.output.clone();
         let output = try!(self.run());
 
