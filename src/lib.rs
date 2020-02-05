@@ -4,9 +4,11 @@ extern crate itertools;
 
 use itertools::Itertools;
 
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::str;
+use std::{
+    io::Write,
+    path::{Path, PathBuf},
+    str,
+};
 
 /// path to pandoc executable
 #[cfg(windows)]
@@ -36,8 +38,7 @@ const PATH_DELIMIT: &str = ";";
 #[cfg(not(windows))]
 const PATH_DELIMIT: &str = ":";
 
-use std::env;
-use std::process::Command;
+use std::{env, process::Command};
 
 #[derive(Copy, Clone, Debug)]
 pub enum TrackChanges {
@@ -263,7 +264,9 @@ impl PandocOption {
             BaseHeaderLevel(n) => pandoc.args(&[&format!("--base-header-level={}", n)]),
             IndentedCodeClasses(ref s) => pandoc.args(&[&format!("--indented-code-classes={}", s)]),
             Filter(ref program) => pandoc.args(&[&format!("--filter={}", program.display())]),
-            LuaFilter(ref program) => pandoc.args(&[&format!("--lua-filter={}", program.display())]),
+            LuaFilter(ref program) => {
+                pandoc.args(&[&format!("--lua-filter={}", program.display())])
+            }
             Normalize => pandoc.args(&["--normalize"]),
             PreserveTabs => pandoc.args(&["--preserve-tabs"]),
             TabStop(n) => pandoc.args(&[&format!("--tab-stop={}", n)]),
@@ -760,8 +763,8 @@ impl Pandoc {
 
     /// Add a path hint to search for the LaTeX executable.
     ///
-    /// The supplied path is searched first for the latex executable, then the environment variable
-    /// `PATH`, then some hard-coded location hints.
+    /// The supplied path is searched first for the latex executable, then the
+    /// environment variable `PATH`, then some hard-coded location hints.
     pub fn add_latex_path_hint<'p, T: AsRef<Path> + ?Sized>(
         &'p mut self,
         path: &T,
@@ -772,8 +775,8 @@ impl Pandoc {
 
     /// Add a path hint to search for the Pandoc executable.
     ///
-    /// The supplied path is searched first for the Pandoc executable, then the environment variable `PATH`, then
-    /// some hard-coded location hints.
+    /// The supplied path is searched first for the Pandoc executable, then the
+    /// environment variable `PATH`, then some hard-coded location hints.
     pub fn add_pandoc_path_hint<'p, T: AsRef<Path> + ?Sized>(
         &'p mut self,
         path: &T,
@@ -821,10 +824,10 @@ impl Pandoc {
 
     /// Add additional input files
     ///
-    /// The order of adding the files is the order in which they are processed, hence the order is
-    /// important.
-    /// This function does not work, if input has been already set to standard input using
-    /// [`set_input`](#method.set_input_format).
+    /// The order of adding the files is the order in which they are processed,
+    /// hence the order is important.
+    /// This function does not work, if input has been already set to standard
+    /// input using [`set_input`](#method.set_input_format).
     pub fn add_input<'p, T: AsRef<Path> + ?Sized>(&'p mut self, filename: &T) -> &'p mut Pandoc {
         let filename = filename.as_ref().to_owned();
         match self.input {
@@ -844,8 +847,8 @@ impl Pandoc {
 
     /// Set input for Pandoc.
     ///
-    /// The input is given with `pandoc::InputKind` and overrides any inputs already
-    /// supplied.
+    /// The input is given with `pandoc::InputKind` and overrides any inputs
+    /// already supplied.
     ///
     /// # Example
     ///
@@ -886,14 +889,16 @@ impl Pandoc {
 
     /// Enable the generation of a table of contents
     ///
-    /// By default, documents are transformed as they are. If this option is set, a table of
-    /// contents is added right in front of the actual document.
+    /// By default, documents are transformed as they are. If this option is
+    /// set, a table of contents is added right in front of the actual
+    /// document.
     pub fn set_toc(&mut self) -> &mut Pandoc {
         self.options.push(PandocOption::TableOfContents);
         self
     }
 
-    /// Treat top-level headers as chapters in LaTeX, ConTeXt, and DocBook output.
+    /// Treat top-level headers as chapters in LaTeX, ConTeXt, and DocBook
+    /// output.
     pub fn set_chapters(&mut self) -> &mut Pandoc {
         self.options
             .push(PandocOption::TopLevelDivision(Tld::Chapter));
@@ -902,8 +907,8 @@ impl Pandoc {
 
     /// Set custom prefix for sections.
     ///
-    /// If this function is called, all sections will be numbered. Normally, sections in LaTeX,
-    /// ConTeXt, HTML, or EPUB output are unnumbered.
+    /// If this function is called, all sections will be numbered. Normally,
+    /// sections in LaTeX, ConTeXt, HTML, or EPUB output are unnumbered.
     pub fn set_number_sections(&mut self) -> &mut Pandoc {
         self.options.push(PandocOption::NumberSections);
         self
@@ -927,8 +932,9 @@ impl Pandoc {
 
     /// Set a custom variable.
     ///
-    /// This method sets a custom Pandoc variable. It is adviced not to use this function, because
-    /// there are convenience functions for most of the available variables.
+    /// This method sets a custom Pandoc variable. It is adviced not to use this
+    /// function, because there are convenience functions for most of the
+    /// available variables.
     pub fn set_variable<'p, T: AsRef<str> + ?Sized, U: AsRef<str> + ?Sized>(
         &'p mut self,
         key: &T,
@@ -943,9 +949,10 @@ impl Pandoc {
 
     /// Add a Pandoc filter.
     ///
-    /// Pandoc parses any of the supported input formats to an abstract syntax tree (AST). If a
-    /// filter is specified, it will receive a JSON representation of this AST and can transform it
-    /// to its liking and add/modify/remove elements. The output is then passed back to Pandoc.
+    /// Pandoc parses any of the supported input formats to an abstract syntax
+    /// tree (AST). If a filter is specified, it will receive a JSON
+    /// representation of this AST and can transform it to its liking and
+    /// add/modify/remove elements. The output is then passed back to Pandoc.
     pub fn add_filter(&mut self, filter: fn(String) -> String) -> &mut Pandoc {
         self.filters.push(filter);
         self
@@ -990,8 +997,8 @@ impl Pandoc {
             .intersperse(PATH_DELIMIT)
             .collect();
         cmd.env("PATH", path);
-        let output = try!(self.output.ok_or(PandocError::NoOutputSpecified));
-        let input = try!(self.input.ok_or(PandocError::NoInputSpecified));
+        let output = self.output.ok_or(PandocError::NoOutputSpecified)?;
+        let input = self.input.ok_or(PandocError::NoInputSpecified)?;
         let input = match input {
             InputKind::Files(files) => {
                 for file in files {
@@ -1031,11 +1038,11 @@ impl Pandoc {
         if self.print_pandoc_cmdline {
             println!("{:?}", cmd);
         }
-        let mut child = try!(cmd.spawn());
+        let mut child = cmd.spawn()?;
         if let Some(ref mut stdin) = child.stdin {
-            try!(stdin.write_all(input.as_bytes()));
+            stdin.write_all(input.as_bytes())?;
         }
-        let o = try!(child.wait_with_output());
+        let o = child.wait_with_output()?;
         if o.status.success() {
             Ok(o.stdout)
         } else {
@@ -1094,7 +1101,7 @@ impl Pandoc {
                 self.input_format = Some((InputFormat::Json, ext));
             }
         }
-        let o = try!(pre.run());
+        let o = pre.run()?;
         let o = String::from_utf8(o).unwrap();
         // apply all filters
         let filtered = filters.into_iter().fold(o, |acc, item| item(acc));
@@ -1110,9 +1117,9 @@ impl Pandoc {
     /// The `PandocOutput` variant returned depends on the `OutputKind`
     /// configured:
     pub fn execute(mut self) -> Result<PandocOutput, PandocError> {
-        try!(self.preprocess());
+        self.preprocess()?;
         let output_kind = self.output.clone();
-        let output = try!(self.run());
+        let output = self.run()?;
 
         match output_kind {
             Some(OutputKind::File(name)) => Ok(PandocOutput::ToFile(PathBuf::from(name))),
@@ -1169,12 +1176,8 @@ impl std::fmt::Debug for PandocError {
         match *self {
             PandocError::IoErr(ref e) => write!(fmt, "{:?}", e),
             PandocError::Err(ref e) => {
-                try!(write!(fmt, "exit_code: {:?}", e.status.code()));
-                try!(write!(
-                    fmt,
-                    "stdout: {}",
-                    String::from_utf8_lossy(&e.stdout)
-                ));
+                write!(fmt, "exit_code: {:?}", e.status.code())?;
+                write!(fmt, "stdout: {}", String::from_utf8_lossy(&e.stdout))?;
                 write!(fmt, "stderr: {}", String::from_utf8_lossy(&e.stderr))
             }
             PandocError::NoOutputSpecified => write!(fmt, "No output file was specified"),
@@ -1198,19 +1201,7 @@ impl std::fmt::Display for PandocError {
 }
 
 impl std::error::Error for PandocError {
-    fn description(&self) -> &str {
-        use PandocError::*;
-        match *self {
-            IoErr(ref e) => e.description(),
-            Err(_) => "Pandoc execution failed",
-            NoOutputSpecified => "No output file was specified",
-            NoInputSpecified => "No input files were specified",
-            PandocNotFound => "Pandoc not found",
-            BadUtf8Conversion(_) => "UTF-8 conversion of pandoc output failed",
-        }
-    }
-
-    fn cause(&self) -> Option<&std::error::Error> {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match *self {
             PandocError::IoErr(ref e) => Some(e),
             _ => None,
