@@ -100,6 +100,8 @@ pub enum PandocOption {
     IndentedCodeClasses(String),
     /// -F PROGRAM --filter=PROGRAM
     Filter(PathBuf),
+    /// -F PROGRAM --lua-filter=PROGRAM
+    LuaFilter(PathBuf),
     /// --normalize
     Normalize,
     /// -p --preserve-tabs
@@ -261,6 +263,7 @@ impl PandocOption {
             BaseHeaderLevel(n) => pandoc.args(&[&format!("--base-header-level={}", n)]),
             IndentedCodeClasses(ref s) => pandoc.args(&[&format!("--indented-code-classes={}", s)]),
             Filter(ref program) => pandoc.args(&[&format!("--filter={}", program.display())]),
+            LuaFilter(ref program) => pandoc.args(&[&format!("--lua-filter={}", program.display())]),
             Normalize => pandoc.args(&["--normalize"]),
             PreserveTabs => pandoc.args(&["--preserve-tabs"]),
             TabStop(n) => pandoc.args(&[&format!("--tab-stop={}", n)]),
